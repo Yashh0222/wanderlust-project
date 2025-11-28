@@ -42,12 +42,9 @@ module.exports.showListing = async (req, res) => {
   res.render("listings/show.ejs", { listing: safeListing });
 };
 
-
-
 module.exports.createListing = async (req, res) => {
   const { listing } = req.body;
 
-  // 1️ Geocode using Nominatim
   const geoResponse = await axios.get(
     "https://nominatim.openstreetmap.org/search",
     {
@@ -62,20 +59,15 @@ module.exports.createListing = async (req, res) => {
     }
   );
 
-
-
-  let coords = [0, 0]; // fallback
+  let coords = [0, 0];
   if (geoResponse.data.length > 0) {
     const place = geoResponse.data[0];
     coords = [parseFloat(place.lon), parseFloat(place.lat)];
   }
 
-  // 2️ Create listing
   const newListing = new Listing(listing);
-
   newListing.owner = req.user._id;
 
-  // 3️ Save geometry
   newListing.geometry = {
     type: "Point",
     coordinates: coords
@@ -85,10 +77,8 @@ module.exports.createListing = async (req, res) => {
     newListing.image = {
       url: "/" + req.file.path.replace(/\\/g, "/"),
       filename: req.file.filename
-
     };
   }
-
 
   await newListing.save();
   res.redirect(`/listings/${newListing._id}`);
@@ -103,11 +93,7 @@ module.exports.renderEditForm = async (req, res) => {
     return res.redirect("/listings");
   }
 
-  // let originalImageUrl = listing.image.url;
-  // originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250" );
-  // res.render("listings/edit.ejs", { listing, originalImageUrl });
   res.render("listings/edit.ejs", { listing });
-
 };
 
 module.exports.updateListing = async (req, res) => {
@@ -116,51 +102,51 @@ module.exports.updateListing = async (req, res) => {
 
   const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
 
-  // If location changed → re-geocode
-  const geoResponse = await axios.get(
-    "https://nominatim.openstreetmap.org/search",
-    {
-      params: {
-        q: listing.location,
-        format: "json",
-        limit: 1
-      },
-      headers: {
-        "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
+  // re-geocode new location
+  if (listing.location) {
+    const geoResponse = await axios.get(
+      "https://nominatim.openstreetmap.org/search",
+      {
+        params: {
+          q: listing.location,
+          format: "json",
+          limit: 1
+        },
+        headers: {
+          "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
+        }
       }
+    );
+
+    if (geoResponse.data.length > 0) {
+      const place = geoResponse.data[0];
+
+      updatedListing.geometry = {
+        type: "Point",
+        coordinates: [
+          parseFloat(place.lon),
+          parseFloat(place.lat)
+        ]
+      };
     }
-  );
-
-
-  if (geoResponse.data.length > 0) {
-    const place = geoResponse.data[0];
-
-    updatedListing.geometry = {
-      type: "Point",
-      coordinates: [
-        parseFloat(place.lon),
-        parseFloat(place.lat)
-      ]
-    };
-
   }
-}
 
-if (req.file) {
-  updatedListing.image = {
-    url: "/" + req.file.path.replace(/\\/g, "/"),
-    filename: req.file.filename
-  };
-}
+  // handle new image if uploaded
+  if (req.file) {
+    updatedListing.image = {
+      url: "/" + req.file.path.replace(/\\/g, "/"),
+      filename: req.file.filename
+    };
+  }
 
-await updatedListing.save();
-res.redirect(`/listings/${updatedListing._id}`);
+  // save changes
+  await updatedListing.save();
+  res.redirect(`/listings/${updatedListing._id}`);
 };
-
 
 module.exports.destroyListing = async (req, res) => {
   const { id } = req.params;
-  const deletedListing = await Listing.findByIdAndDelete(id);
+  await Listing.findByIdAndDelete(id);
 
   req.flash("success", "Listing Deleted!");
   res.redirect("/listings");

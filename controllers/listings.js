@@ -57,10 +57,11 @@ module.exports.createListing = async (req, res) => {
         limit: 1
       },
       headers: {
-        "User-Agent": "WanderlustApp/1.0 (your-email@example.com)"
+        "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
       }
     }
   );
+
 
 
   let coords = [0, 0]; // fallback

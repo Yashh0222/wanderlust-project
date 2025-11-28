@@ -48,13 +48,20 @@ module.exports.createListing = async (req, res) => {
   const { listing } = req.body;
 
   // 1️ Geocode using Nominatim
-  const geoResponse = await axios.get("https://nominatim.openstreetmap.org/search", {
-    params: {
-      q: listing.location,  // user entered location
-      format: "json",
-      limit: 1
+  const geoResponse = await axios.get(
+    "https://nominatim.openstreetmap.org/search",
+    {
+      params: {
+        q: listing.location,
+        format: "json",
+        limit: 1
+      },
+      headers: {
+        "User-Agent": "WanderlustApp/1.0 (your-email@example.com)"
+      }
     }
-  });
+  );
+
 
   let coords = [0, 0]; // fallback
   if (geoResponse.data.length > 0) {
@@ -69,7 +76,7 @@ module.exports.createListing = async (req, res) => {
 
   // 3️ Save geometry
   newListing.geometry = {
-    type : "Point",
+    type: "Point",
     coordinates: coords
   };
 
@@ -109,38 +116,44 @@ module.exports.updateListing = async (req, res) => {
   const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
 
   // If location changed → re-geocode
-  if (listing.location) {
-    const geoResponse = await axios.get("https://nominatim.openstreetmap.org/search", {
+  const geoResponse = await axios.get(
+    "https://nominatim.openstreetmap.org/search",
+    {
       params: {
         q: listing.location,
         format: "json",
         limit: 1
+      },
+      headers: {
+        "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
       }
-    });
-
-    if (geoResponse.data.length > 0) {
-      const place = geoResponse.data[0];
-
-      updatedListing.geometry = {
-        type: "Point",
-        coordinates: [
-          parseFloat(place.lon),
-          parseFloat(place.lat)
-        ]
-      };
-
     }
-  }
+  );
 
-  if (req.file) {
-    updatedListing.image = {
-      url: "/" + req.file.path.replace(/\\/g, "/"),
-      filename: req.file.filename
+
+  if (geoResponse.data.length > 0) {
+    const place = geoResponse.data[0];
+
+    updatedListing.geometry = {
+      type: "Point",
+      coordinates: [
+        parseFloat(place.lon),
+        parseFloat(place.lat)
+      ]
     };
-  }
 
-  await updatedListing.save();
-  res.redirect(`/listings/${updatedListing._id}`);
+  }
+}
+
+if (req.file) {
+  updatedListing.image = {
+    url: "/" + req.file.path.replace(/\\/g, "/"),
+    filename: req.file.filename
+  };
+}
+
+await updatedListing.save();
+res.redirect(`/listings/${updatedListing._id}`);
 };
 
 

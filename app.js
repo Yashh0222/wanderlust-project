@@ -1,5 +1,5 @@
-if(process.env.NODE_ENV !=  "production"){
-  require("dotenv").config();  
+if (process.env.NODE_ENV != "production") {
+  require("dotenv").config();
 }
 // console.log(process.env.SECRET);
 
@@ -58,26 +58,21 @@ const store = MongoStore.create({
   touchAfter: 24 * 3600,
 });
 
-store.on("error", (err) =>{
+store.on("error", (err) => {
   console.log("ERROR in mongo session", err);
 });
 
 const sessionOptions = {
   store,
-  secret : process.env.SECRET,
+  secret: process.env.SECRET,
   resave: false,
-  saveUninitialized : true,
-  cookie:{
+  saveUninitialized: true,
+  cookie: {
     expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true
   },
 }
-
-// app.get("/", (req, res) => {
-//   res.send("I am root");
-// });
-
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -89,9 +84,9 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.use((req, res, next)=>{
-  res.locals.success = req.flash("success");  
-  res.locals.error = req.flash("error");  
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
   res.locals.currUser = req.user;
   next();
 })
@@ -105,6 +100,10 @@ app.use((req, res, next)=>{
 //   let registeredUser = await User.register(fakeUser, "helloworld");
 //   res.send(registeredUser);
 // })
+
+app.get("/", (req, res) => {
+  res.redirect("/listings");
+});
 
 app.use("/listings", listingsRouter);
 app.use("/listings/:id/reviews", reviewsRouter);

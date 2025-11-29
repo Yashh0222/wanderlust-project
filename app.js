@@ -48,7 +48,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
-app.use('/uploads', express.static('uploads'));
+if (process.env.NODE_ENV !== "production") {
+  app.use('/uploads', express.static('uploads'));
+}
+
 
 const store = MongoStore.create({
   mongoUrl: dbUrl,

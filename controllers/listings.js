@@ -45,17 +45,12 @@ module.exports.showListing = async (req, res) => {
 module.exports.createListing = async (req, res) => {
   const { listing } = req.body;
 
+  // Geocode
   const geoResponse = await axios.get(
     "https://nominatim.openstreetmap.org/search",
     {
-      params: {
-        q: listing.location,
-        format: "json",
-        limit: 1
-      },
-      headers: {
-        "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
-      }
+      params: { q: listing.location, format: "json", limit: 1 },
+      headers: { "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)" }
     }
   );
 
@@ -73,16 +68,24 @@ module.exports.createListing = async (req, res) => {
     coordinates: coords
   };
 
+  // CLOUDINARY UPLOAD (Fix)
   if (req.file) {
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "Wanderlust",
+    });
+
     newListing.image = {
-      url: "/" + req.file.path.replace(/\\/g, "/"),
-      filename: req.file.filename
+      url: uploadResult.secure_url,
+      filename: uploadResult.public_id,
     };
+
+    fs.unlinkSync(req.file.path); // Delete temp file
   }
 
   await newListing.save();
   res.redirect(`/listings/${newListing._id}`);
 };
+
 
 module.exports.renderEditForm = async (req, res) => {
   const { id } = req.params;
@@ -102,47 +105,43 @@ module.exports.updateListing = async (req, res) => {
 
   const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
 
-  // re-geocode new location
+  // re-geocode
   if (listing.location) {
     const geoResponse = await axios.get(
       "https://nominatim.openstreetmap.org/search",
       {
-        params: {
-          q: listing.location,
-          format: "json",
-          limit: 1
-        },
-        headers: {
-          "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)"
-        }
+        params: { q: listing.location, format: "json", limit: 1 },
+        headers: { "User-Agent": "WanderlustProject (koparkaryash41@gmail.com)" }
       }
     );
 
     if (geoResponse.data.length > 0) {
       const place = geoResponse.data[0];
-
       updatedListing.geometry = {
         type: "Point",
-        coordinates: [
-          parseFloat(place.lon),
-          parseFloat(place.lat)
-        ]
+        coordinates: [parseFloat(place.lon), parseFloat(place.lat)]
       };
     }
   }
 
-  // handle new image if uploaded
+  // CLOUDINARY UPLOAD FIX
   if (req.file) {
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "Wanderlust",
+    });
+
     updatedListing.image = {
-      url: "/" + req.file.path.replace(/\\/g, "/"),
-      filename: req.file.filename
+      url: uploadResult.secure_url,
+      filename: uploadResult.public_id,
     };
+
+    fs.unlinkSync(req.file.path);
   }
 
-  // save changes
   await updatedListing.save();
   res.redirect(`/listings/${updatedListing._id}`);
 };
+
 
 module.exports.destroyListing = async (req, res) => {
   const { id } = req.params;

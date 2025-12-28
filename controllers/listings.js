@@ -3,7 +3,7 @@ const axios = require("axios");
 const cloudinary = require("../cloudConfig");
 const fs = require("fs");
 
-//to search listing using location 
+//to search listing using location
 module.exports.index = async (req, res) => {
   const {location } = req.query;
 

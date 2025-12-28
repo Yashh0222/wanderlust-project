@@ -121,3 +121,11 @@ body{
     height: 400px;
     width: 100vh;
 }
+
+@media (max-width: 768px) {
+  .navbar-collapse {
+    background-color: white;
+    padding-bottom: 1rem;
+  }
+}
+

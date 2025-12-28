@@ -3,9 +3,20 @@ const axios = require("axios");
 const cloudinary = require("../cloudConfig");
 const fs = require("fs");
 
+//to search listing using location 
 module.exports.index = async (req, res) => {
-  const allListings = await Listing.find({});
-  res.render("listings/index.ejs", { allListings });
+  const {location } = req.query;
+
+  let allListings;
+
+  if(location && location.trim() !== ""){
+    allListings = await Listing.find({
+      location : { $regex: location, $options: "i"}
+    });
+  }else{
+    allListings = await Listing.find({});
+  }
+  res.render("listings/index.ejs", { allListings, location});
 };
 
 module.exports.renderNewForm = (req, res) => {

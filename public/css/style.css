@@ -149,3 +149,14 @@ body{
 .filter:visited {
   color: inherit;
 }
+
+.f-info-socials a {
+  color: inherit;        /* keeps default icon color */
+  text-decoration: none; /* removes underline */
+  margin-right: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.f-info-socials a:hover {
+  color: #0a66c2; /* LinkedIn blue */
+}

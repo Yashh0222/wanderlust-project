@@ -129,3 +129,23 @@ body{
   }
 }
 
+.filter {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 2rem;
+  opacity: 0.7;
+  min-width: 70px;
+}
+
+.filter:hover {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.filter:visited {
+  color: inherit;
+}

@@ -19,18 +19,33 @@ const listingSchema = new Schema({
   location: String,
   country: String,
 
-  // ADD THIS PART ↓↓↓↓↓
-geometry: {
-  type: {
+  category: {
     type: String,
-    enum: ["Point"],
-    required: true,
-  },
-  coordinates: {
-    type: [Number], // lon, lat
+    enum: [
+      "Trending",
+      "Rooms",
+      "Iconic Cities",
+      "Mountains",
+      "Castles",
+      "Amazing Pools",
+      "Camping",
+      "Farms",
+      "Arctic"
+    ],
     required: true
-  }
-},
+  },
+  // ADD THIS PART ↓↓↓↓↓
+  geometry: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // lon, lat
+      required: true
+    }
+  },
 
   // ADD THIS PART ↑↑↑↑↑
 

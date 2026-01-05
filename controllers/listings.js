@@ -5,19 +5,25 @@ const fs = require("fs");
 
 //to search listing using location
 module.exports.index = async (req, res) => {
-  const {location } = req.query;
+  const { location, category } = req.query;
 
-  let allListings;
+  let query = {};
 
-  if(location && location.trim() !== ""){
-    allListings = await Listing.find({
-      location : { $regex: location, $options: "i"}
-    });
-  }else{
-    allListings = await Listing.find({});
+  // Location filter
+  if (location && location.trim() !== "") {
+    query.location = { $regex: location, $options: "i" };
   }
-  res.render("listings/index.ejs", { allListings, location});
+
+  // Category filter
+  if (category && category.trim() !== "") {
+    query.category = category;
+  }
+
+  const allListings = await Listing.find(query);
+
+  res.render("listings/index.ejs", { allListings, location, category });
 };
+
 
 module.exports.renderNewForm = (req, res) => {
   res.render("listings/new.ejs");

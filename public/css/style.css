@@ -127,6 +127,51 @@ body{
     background-color: white;
     padding-bottom: 1rem;
   }
+
+  .show-card {
+    width: 90% !important;
+    margin: 0 auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .show-img {
+    height: 25vh !important;
+  }
+
+  #map {
+    width: 100% !important;
+    height: 300px !important;
+  }
+
+  .col-8.offset-3,
+  .col-6.offset-3 {
+    width: 90% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .btns {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btns .btn,
+  .btns form button {
+    width: 80%;
+  }
+
+  .review-card {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .listing-card {
+    margin-bottom: 1rem;
+  }
 }
 
 .filter {

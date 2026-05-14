@@ -1,0 +1,119 @@
+<% layout("/layouts/boilerplate") %>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<div class="row mt-3">
+    <div class="col-8 offset-2">
+        <h3 class="mb-4"><i class="fas fa-calendar-check"></i> My Bookings</h3>
+
+        <% if(bookings.length === 0) { %>
+            <div class="alert alert-info">
+                <p>No bookings yet. <a href="/listings">Browse listings</a> to make your first booking!</p>
+            </div>
+        <% } else { %>
+            <div class="row">
+                <% for(let booking of bookings) { %>
+                    <div class="col-md-6 mb-4">
+                        <div class="card listing-card">
+                            <img src="<%= booking.listing?.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400' %>" class="card-img-top" alt="listing" style="height: 200px;">
+                            <div class="card-body">
+                                <h5 class="card-title"><%= booking.listing?.title || 'Listing' %></h5>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i>
+                                        <%= new Date(booking.checkIn).toLocaleDateString() %> -
+                                        <%= new Date(booking.checkOut).toLocaleDateString() %>
+                                    </small><br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-users"></i> <%= booking.guests %> guest(s)
+                                    </small><br>
+                                    <strong>Total: ₹<%= booking.totalPrice.toLocaleString("en-IN") %></strong>
+                                </p>
+                                <% if(booking.status === "pending") { %>
+                                    <span class="badge bg-warning text-dark">Pending Payment</span>
+                                    <button class="btn btn-danger btn-sm mt-2 pay-now-btn"
+                                        data-booking-id="<%= booking._id %>"
+                                        data-amount="<%= booking.totalPrice %>"
+                                        data-listing-title="<%= booking.listing?.title || 'Listing' %>">
+                                        Pay Now
+                                    </button>
+                                <% } else if(booking.status === "confirmed") { %>
+                                    <span class="badge bg-success">Confirmed</span>
+                                    <form action="/cancel-booking/<%= booking._id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger mt-2">Cancel Booking</button>
+                                    </form>
+                                <% } else if(booking.status === "cancelled") { %>
+                                    <span class="badge bg-danger">Cancelled</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.pay-now-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const bookingId = button.dataset.bookingId;
+            const amount = parseFloat(button.dataset.amount);
+            const listingTitle = button.dataset.listingTitle;
+
+            try {
+                const response = await fetch('/create-payment-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                const options = {
+                    key: 'rzp_test_SpND9HiHlg8y9r',
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'Wanderlust Booking',
+                    description: 'Payment for ' + listingTitle,
+                    order_id: data.orderId,
+                    prefill: {
+                        name: '<%= currUser ? currUser.username : "Test User" %>',
+                        email: '<%= currUser ? currUser.email : "test@example.com" %>'
+                    },
+                    handler: async (paymentResponse) => {
+                        const verifyResponse = await fetch('/verify-booking-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: paymentResponse.razorpay_order_id,
+                                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                razorpay_signature: paymentResponse.razorpay_signature,
+                                bookingId: bookingId
+                            })
+                        });
+
+                        const verifyData = await verifyResponse.json();
+                        if (verifyData.success) {
+                            window.location.href = '/my-bookings';
+                        } else {
+                            alert('Payment verification failed: ' + verifyData.error);
+                        }
+                    },
+                    theme: { color: '#fe424d' }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong. Please try again.');
+            }
+        });
+    });
+</script>

@@ -7,6 +7,21 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    googleId: String,
+    googleProfile: {
+        name: String,
+        picture: String
+    },
+    wishlist: [{
+        type: Schema.Types.ObjectId,
+        ref: "Listing"
+    }]
 });
 
 userSchema.plugin(passportLocalMongoose);

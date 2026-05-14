@@ -10,41 +10,46 @@
           <label for="title" class="form-label">Title</label>
           <input name="listing[title]" value="<%= listing.title %> " type="text" class="form-control" required />
           <div class="valid-feedback">Title looks good!</div>
-
         </div>
 
         <div class="mb-3">
           <label for="description" class="form-label">Description</label>
-
           <textarea name="listing[description]" class="form-control" required><%= listing.description %> </textarea>
           <div class="invalid-feedback">Please enter a short description</div>
-
         </div>
 
         
         <div style="width:300px; height:200px; overflow:hidden;">
-          Current Image:
+          Current Main Image:
           <img src="<%= listing.image.url %>" class="img-fluid" style="width:100%; height:100%; object-fit:cover;">
         </div>
 
-
         <div class="mb-3">
-          <label for="image" class="form-label">Upload New Image</label>
+          <label for="image" class="form-label">Replace Main Image</label>
           <input type="file" name="image" class="form-control" />
         </div>
-        <!-- <input name="listing[image][url]" value="<%= listing && listing.image ? listing.image.url : '' %>"
-          class="form-control" required /> -->
 
-        <!-- hidden filename (keeps previous filename or default) -->
+        <div class="mb-3">
+          <label class="form-label">Category</label>
+          <select name="listing[category]" class="form-control" required>
+            <option value="Rooms" <%= listing.category === 'Rooms' ? 'selected' : '' %>>Rooms</option>
+            <option value="Trending" <%= listing.category === 'Trending' ? 'selected' : '' %>>Trending</option>
+            <option value="Iconic Cities" <%= listing.category === 'Iconic Cities' ? 'selected' : '' %>>Iconic Cities</option>
+            <option value="Mountains" <%= listing.category === 'Mountains' ? 'selected' : '' %>>Mountains</option>
+            <option value="Castles" <%= listing.category === 'Castles' ? 'selected' : '' %>>Castles</option>
+            <option value="Amazing Pools" <%= listing.category === 'Amazing Pools' ? 'selected' : '' %>>Amazing Pools</option>
+            <option value="Camping" <%= listing.category === 'Camping' ? 'selected' : '' %>>Camping</option>
+            <option value="Farms" <%= listing.category === 'Farms' ? 'selected' : '' %>>Farms</option>
+            <option value="Arctic" <%= listing.category === 'Arctic' ? 'selected' : '' %>>Arctic</option>
+          </select>
+        </div>
 
         <div class="row">
           <div class="mb-3 col-md-4">
             <label for="price" class="form-label">Price</label>
             <input name="listing[price]" value="<%= listing.price %>" type="number" class="form-control" required />
             <div class="invalid-feedback">Please enter valid Price</div>
-
           </div>
-
 
           <div class="mb-3 col-md-8">
             <label for="country" class="form-label">Country</label>
@@ -63,4 +68,3 @@
       </form>
     </div>
   </div>
-  <script src="/js/script.js"></script>

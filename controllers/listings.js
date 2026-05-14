@@ -3,25 +3,41 @@ const axios = require("axios");
 const cloudinary = require("../cloudConfig");
 const fs = require("fs");
 
-//to search listing using location
 module.exports.index = async (req, res) => {
-  const { location, category } = req.query;
+  const { category, minPrice, maxPrice } = req.query;
+  const page = parseInt(req.query.page) || 1;
+  const limit = 12;
+  const skip = (page - 1) * limit;
 
   let query = {};
 
-  // Location filter
-  if (location && location.trim() !== "") {
-    query.location = { $regex: location, $options: "i" };
-  }
-
-  // Category filter
   if (category && category.trim() !== "") {
     query.category = category;
   }
 
-  const allListings = await Listing.find(query);
+  if (minPrice || maxPrice) {
+    query.price = {};
+    if (minPrice) query.price.$gte = parseInt(minPrice);
+    if (maxPrice) query.price.$lte = parseInt(maxPrice);
+  }
 
-  res.render("listings/index.ejs", { allListings, location, category });
+  const allListings = await Listing.find(query)
+    .select("title image price location category")
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Listing.countDocuments(query);
+  const totalPages = Math.ceil(total / limit) || 1;
+
+  res.render("listings/index.ejs", { 
+    allListings, 
+    category, 
+    minPrice, 
+    maxPrice, 
+    currentPage: page,
+    totalPages: totalPages,
+    total: total
+  });
 };
 
 
@@ -43,11 +59,21 @@ module.exports.showListing = async (req, res) => {
     return res.redirect("/listings");
   }
 
+  let isInWishlist = false;
+  if (req.user) {
+    const User = require("../Models/user");
+    const user = await User.findById(req.user._id);
+    if (user && user.wishlist.includes(id)) {
+      isInWishlist = true;
+    }
+  }
+
   const safeListing = {
     _id: listing._id,
     title: listing.title,
     description: listing.description,
     image: listing.image,
+    images: listing.images,
     price: listing.price,
     location: listing.location,
     country: listing.country,
@@ -56,13 +82,12 @@ module.exports.showListing = async (req, res) => {
     reviews: listing.reviews
   };
 
-  res.render("listings/show.ejs", { listing: safeListing });
+  res.render("listings/show.ejs", { listing: safeListing, isInWishlist });
 };
 
 module.exports.createListing = async (req, res) => {
   const { listing } = req.body;
 
-  // Geocode
   const geoResponse = await axios.get(
     "https://nominatim.openstreetmap.org/search",
     {
@@ -85,18 +110,28 @@ module.exports.createListing = async (req, res) => {
     coordinates: coords
   };
 
-  // CLOUDINARY UPLOAD (Fix)
-  if (req.file) {
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+  if (req.files["image"] && req.files["image"][0]) {
+    const uploadResult = await cloudinary.uploader.upload(req.files["image"][0].path, {
       folder: "Wanderlust",
     });
-
     newListing.image = {
       url: uploadResult.secure_url,
       filename: uploadResult.public_id,
     };
+    fs.unlinkSync(req.files["image"][0].path);
+  }
 
-    fs.unlinkSync(req.file.path); // Delete temp file
+  if (req.files["images"]) {
+    for (const file of req.files["images"]) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: "Wanderlust/gallery",
+      });
+      newListing.images.push({
+        url: uploadResult.secure_url,
+        filename: uploadResult.public_id
+      });
+      fs.unlinkSync(file.path);
+    }
   }
 
   await newListing.save();
@@ -122,7 +157,6 @@ module.exports.updateListing = async (req, res) => {
 
   const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
 
-  // re-geocode
   if (listing.location) {
     const geoResponse = await axios.get(
       "https://nominatim.openstreetmap.org/search",
@@ -141,18 +175,28 @@ module.exports.updateListing = async (req, res) => {
     }
   }
 
-  // CLOUDINARY UPLOAD FIX
-  if (req.file) {
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+  if (req.files["image"] && req.files["image"][0]) {
+    const uploadResult = await cloudinary.uploader.upload(req.files["image"][0].path, {
       folder: "Wanderlust",
     });
-
     updatedListing.image = {
       url: uploadResult.secure_url,
       filename: uploadResult.public_id,
     };
+    fs.unlinkSync(req.files["image"][0].path);
+  }
 
-    fs.unlinkSync(req.file.path);
+  if (req.files["images"]) {
+    for (const file of req.files["images"]) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: "Wanderlust/gallery",
+      });
+      updatedListing.images.push({
+        url: uploadResult.secure_url,
+        filename: uploadResult.public_id
+      });
+      fs.unlinkSync(file.path);
+    }
   }
 
   await updatedListing.save();

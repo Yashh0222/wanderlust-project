@@ -20,6 +20,7 @@ const MongoStore = require('connect-mongo');
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("./Models/user.js");
 
 
@@ -45,6 +46,7 @@ async function main() {
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
@@ -81,6 +83,44 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:8080/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        let user = await User.findOne({ googleId: profile.id });
+
+        if (!user) {
+            user = await User.findOne({ email: profile.emails[0].value });
+
+            if (user) {
+                user.googleId = profile.id;
+                user.googleProfile = {
+                    name: profile.displayName,
+                    picture: profile.photos[0]?.value
+                };
+                user.isVerified = true;
+                await user.save();
+            } else {
+                user = await User.create({
+                    username: profile.displayName,
+                    email: profile.emails[0].value,
+                    googleId: profile.id,
+                    googleProfile: {
+                        name: profile.displayName,
+                        picture: profile.photos[0]?.value
+                    },
+                    isVerified: true
+                });
+            }
+        }
+        done(null, user);
+    } catch (error) {
+        done(error, null);
+    }
+}));
+
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
@@ -88,6 +128,7 @@ app.use((req, res, next) => {
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   res.locals.currUser = req.user;
+  res.locals.razorpayKeyId = process.env.RAZORPAY_KEY_ID;
   next();
 })
 
@@ -105,6 +146,8 @@ app.get("/", (req, res) => {
   res.redirect("/listings");
 });
 
+app.use("/", require("./routes/booking"));
+app.use("/", require("./routes/payment"));
 app.use("/listings", listingsRouter);
 app.use("/listings/:id/reviews", reviewsRouter);
 app.use("/", userRouter);

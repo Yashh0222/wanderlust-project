@@ -5,6 +5,9 @@ const { listingSchema, reviewSchema } = require("./schema.js");
 
 module.exports.isLoggedIn = (req, res, next)=>{
      if(!req.isAuthenticated()){
+        if (req.originalUrl.startsWith("/api/")) {
+            return res.status(401).json({ error: "You must be logged in to use this feature." });
+        }
         req.session.redirectUrl = req.originalUrl;
         req.flash("error", "You must be logged in to create listing!");
         return res.redirect("/login");

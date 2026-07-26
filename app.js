@@ -151,6 +151,8 @@ app.use("/", require("./routes/payment"));
 app.use("/listings", listingsRouter);
 app.use("/listings/:id/reviews", reviewsRouter);
 app.use("/", userRouter);
+app.use("/", require("./routes/agent"));
+app.use("/", require("./routes/seed"));
 
 //if user try to go to any uninitilised route then this err wil for all other routes
 app.use((req, res, next) => {

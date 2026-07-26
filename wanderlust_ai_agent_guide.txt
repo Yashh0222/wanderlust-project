@@ -1,0 +1,148 @@
+====================================================================
+WANDERLUST AI BOOKING AGENT - STEP BY STEP BUILD GUIDE
+====================================================================
+Goal: An agent that understands what the user wants, searches listings
+semantically, and books only after explicit user confirmation.
+Stack: MERN + LangGraph.js + Groq (free LLM) + MongoDB Atlas Vector Search
+====================================================================
+
+PART 1: BASE SETUP
+--------------------------------------------------------------------
+Step 0: Get a free Groq API key
+  - Go to console.groq.com -> sign up -> create API key
+  - Recommended model: llama-3.3-70b-versatile
+
+Step 1: Install packages
+  npm install @langchain/groq @langchain/core @langchain/langgraph zod
+
+Step 2: Add to .env
+  GROQ_API_KEY=your_key_here
+
+
+PART 2: TOOLS (the actions the agent can take)
+--------------------------------------------------------------------
+Step 3: Create agent/tools.js
+  - Define search_listings tool (queries MongoDB / Listing model)
+  - Define book_listing tool (creates a Booking document)
+  - Use zod schemas to define each tool's expected input
+  - IMPORTANT: book_listing should only ever run after human confirmation
+
+
+PART 3: THE LANGGRAPH AGENT (confirmation logic)
+--------------------------------------------------------------------
+Step 4: Create agent/graph.js
+  - Initialize ChatGroq model, bind the tools to it
+  - Node "agent": calls the model, lets it decide what to do
+  - routeNext(): checks the model's tool calls
+      -> if it wants to call book_listing => route to "awaitConfirmation"
+      -> if it wants to call search_listings => route to "tools" (auto-run)
+      -> if no tool call => END (final reply to user)
+  - Node "awaitConfirmation": a no-op checkpoint node (this is the pause point)
+  - Wire up the StateGraph with these nodes and edges
+
+Step 5: Compile the graph with an interrupt
+  - Use MemorySaver() as checkpointer (fine for a project, no Redis needed)
+  - Compile with: interruptBefore: ["awaitConfirmation"]
+  - This makes LangGraph literally halt execution before any booking runs
+
+
+PART 4: BACKEND ROUTES (Express)
+--------------------------------------------------------------------
+Step 6: POST /api/agent/chat
+  - Takes { message, threadId } from frontend
+  - Invokes the graph with config = { configurable: { thread_id: threadId } }
+  - If the reply includes a pending book_listing tool call, send back
+    pendingBooking details (not yet executed)
+
+Step 7: POST /api/agent/confirm
+  - Takes { threadId, confirmed }
+  - If confirmed = false -> just reply "Booking cancelled"
+  - If confirmed = true -> call app.invoke(null, config) to RESUME the
+    paused graph, which now actually executes book_listing
+
+
+PART 5: FRONTEND
+--------------------------------------------------------------------
+Step 8: Build a simple chat widget (React component)
+  - Store a threadId per browser session (localStorage or cookie)
+  - Render normal agent replies as chat bubbles
+  - When response has "pendingBooking" != null, show a confirm/cancel
+    card instead of plain text
+  - Confirm -> POST /api/agent/confirm { confirmed: true }
+  - Cancel  -> POST /api/agent/confirm { confirmed: false }
+
+
+PART 6: SEMANTIC SEARCH UPGRADE (Atlas Vector Search)
+--------------------------------------------------------------------
+Step 9: Move DB to MongoDB Atlas (if not already)
+  - Vector Search only works on Atlas, not local MongoDB
+  - Free M0 cluster is enough
+
+Step 10: Install local embedding model (free, no API key)
+  npm install @xenova/transformers
+
+Step 11: Create utils/embeddings.js
+  - Load pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2")
+  - embedText(text) -> returns a 384-dim vector array
+
+Step 12: Add "embedding" field to Listing schema
+  - Type: [Number]
+
+Step 13: Backfill embeddings for existing listings
+  - One-time script: loop through listings missing an embedding,
+    build text from title + description + location + category,
+    embed it, save it back to the document
+  - Also call embedText() inside the "create listing" route so new
+    listings get embedded automatically going forward
+
+Step 14: Create the Atlas Vector Search index
+  - Atlas UI -> Cluster -> Search -> Create Search Index -> JSON editor
+  - On the "listings" collection:
+    {
+      "fields": [
+        {
+          "type": "vector",
+          "path": "embedding",
+          "numDimensions": 384,
+          "similarity": "cosine"
+        }
+      ]
+    }
+  - Name it: listing_vector_index
+
+Step 15: Create utils/semanticSearch.js
+  - embedText(queryText) to get the query vector
+  - Run $vectorSearch aggregation on Listing collection using the index
+  - Project title, location, price, category, and similarity score
+
+Step 16: Update search_listings tool in agent/tools.js
+  - Replace regex/filter search with semanticSearchListings(description)
+  - Keep maxPrice as an optional post-filter
+
+
+PART 7: TESTING THE FULL FLOW
+--------------------------------------------------------------------
+Step 17: Try this conversation flow end to end:
+  1. "Find me a cozy quiet place near the mountains under 2000"
+     -> semantic search runs automatically -> model summarizes results
+  2. "Book the first one for 2 guests, July 20 to July 22"
+     -> graph PAUSES, sends back pending booking details, does NOT book
+  3. User clicks "Confirm" on frontend
+     -> /api/agent/confirm resumes the graph -> booking actually created
+
+
+NOTES / GOTCHAS
+--------------------------------------------------------------------
+- Groq has no embeddings API -> that's why we use @xenova/transformers
+  locally (fully free) instead of a hosted embedding API.
+- @xenova/transformers downloads a ~90MB model on first run and does
+  inference in-process. On Render's free tier this can slow cold starts.
+  If that becomes a problem, swap to Cohere's free hosted embed API
+  (same code shape, just an HTTP call instead of local inference).
+- MemorySaver (in-memory checkpointing) is fine for a student project.
+  For anything long-running/multi-instance, you'd swap in a persistent
+  checkpointer instead.
+- Never let book_listing execute without going through the
+  interruptBefore / confirm step - this is what prevents accidental
+  or silent bookings.
+====================================================================

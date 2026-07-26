@@ -1,0 +1,350 @@
+#agent-chat-widget {
+  position: fixed !important;
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  z-index: 99999 !important;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  pointer-events: auto !important;
+}
+
+#chat-toggle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #fe424d;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(254, 66, 77, 0.5);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  z-index: 1;
+}
+
+#chat-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(254, 66, 77, 0.6);
+}
+
+#chat-panel {
+  position: fixed !important;
+  bottom: 5rem !important;
+  right: 1.5rem !important;
+  width: 340px !important;
+  max-height: 420px !important;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+#chat-panel.chat-hidden {
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+  pointer-events: none;
+}
+
+#chat-header {
+  background: #fe424d;
+  color: #fff;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+#chat-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+#chat-close:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+#chat-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#chat-messages {
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-msg {
+  display: flex;
+}
+
+.chat-msg.bot {
+  justify-content: flex-start;
+}
+
+.chat-msg.user {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 0.45rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-msg.bot .chat-bubble {
+  background: #f1f1f1;
+  color: #222;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-msg.user .chat-bubble {
+  background: #fe424d;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-typing {
+  display: flex;
+  gap: 3px;
+  padding: 0.45rem 0.7rem;
+  background: #f1f1f1;
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  width: fit-content;
+}
+
+.chat-typing span {
+  width: 6px;
+  height: 6px;
+  background: #999;
+  border-radius: 50%;
+  animation: typingDot 1.2s infinite;
+}
+
+.chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+#chat-pending {
+  padding: 0.5rem 0.75rem;
+}
+
+#chat-pending.chat-hidden {
+  display: none;
+}
+
+.pending-card {
+  border: 1.5px solid #fe424d;
+  border-radius: 10px;
+  padding: 0.55rem;
+  background: #fff5f5;
+}
+
+.pending-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #fe424d;
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-bottom: 0.35rem;
+}
+
+#pending-details {
+  font-size: 0.75rem;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 0.45rem;
+}
+
+.pending-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.pending-actions .btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+#chat-booking-form {
+  padding: 0 0.75rem 0.5rem;
+}
+
+#chat-booking-form.chat-hidden {
+  display: none;
+}
+
+.booking-form-card {
+  border: 1.5px solid #28a745;
+  border-radius: 10px;
+  padding: 0.55rem;
+  background: #f0fff4;
+}
+
+.booking-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-bottom: 0.35rem;
+}
+
+#booking-form-listing {
+  font-size: 0.75rem;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 0.45rem;
+}
+
+.booking-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.booking-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.booking-field label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.booking-field input,
+.booking-field select {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+}
+
+.booking-field input:focus,
+.booking-field select:focus {
+  border-color: #28a745;
+}
+
+.booking-submit-btn {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.35rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+#chat-form {
+  display: flex;
+  padding: 0.45rem 0.5rem;
+  border-top: 1px solid #eee;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+#chat-form.chat-hidden {
+  display: none;
+}
+
+#chat-input {
+  flex: 1;
+  border: 1.5px solid #ddd;
+  border-radius: 18px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+}
+
+#chat-input:focus {
+  border-color: #fe424d;
+}
+
+#btn-send {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fe424d;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+#btn-send:hover {
+  background: #e63946;
+}
+
+#btn-send:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  #chat-panel {
+    width: calc(100vw - 1.5rem) !important;
+    right: 0.75rem !important;
+    bottom: 4.5rem !important;
+    max-height: 55vh !important;
+  }
+
+  #agent-chat-widget {
+    bottom: 1rem !important;
+    right: 1rem !important;
+  }
+}

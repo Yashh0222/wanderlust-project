@@ -1,0 +1,88 @@
+<div id="agent-chat-widget" style="position:fixed!important;bottom:1.5rem!important;right:1.5rem!important;z-index:99999!important;">
+  <button id="chat-toggle" title="AI Booking Assistant">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <div id="chat-panel" class="chat-hidden">
+    <div id="chat-header">
+      <div class="chat-header-info">
+        <i class="fas fa-robot"></i>
+        <span>Wanderlust Assistant</span>
+      </div>
+      <button id="chat-close" title="Close chat">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="chat-scrollable">
+      <div id="chat-messages">
+        <div class="chat-msg bot">
+          <div class="chat-bubble">Hi! I'm your AI booking assistant. Tell me what kind of place you're looking for, and I'll help you find and book it.</div>
+        </div>
+      </div>
+
+      <div id="chat-pending" class="chat-hidden">
+        <div class="pending-card">
+          <div class="pending-header">
+            <i class="fas fa-calendar-check"></i>
+            <span>Booking Confirmation</span>
+          </div>
+          <div id="pending-details"></div>
+          <div class="pending-actions">
+            <button id="btn-confirm" class="btn btn-success btn-sm">
+              <i class="fas fa-check"></i> Confirm
+            </button>
+            <button id="btn-cancel" class="btn btn-outline-danger btn-sm">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="chat-booking-form" class="chat-hidden">
+        <div class="booking-form-card">
+          <div class="booking-form-header">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Complete Your Booking</span>
+          </div>
+          <div id="booking-form-listing"></div>
+          <div class="booking-form-fields">
+            <div class="booking-field">
+              <label for="booking-checkin">Check-in</label>
+              <input type="date" id="booking-checkin" />
+            </div>
+            <div class="booking-field">
+              <label for="booking-checkout">Check-out</label>
+              <input type="date" id="booking-checkout" />
+            </div>
+            <div class="booking-field">
+              <label for="booking-guests">Guests</label>
+              <select id="booking-guests">
+                <option value="1">1 Guest</option>
+                <option value="2" selected>2 Guests</option>
+                <option value="3">3 Guests</option>
+                <option value="4">4 Guests</option>
+                <option value="5">5 Guests</option>
+                <option value="6">6 Guests</option>
+                <option value="7">7 Guests</option>
+                <option value="8">8 Guests</option>
+                <option value="9">9 Guests</option>
+                <option value="10">10 Guests</option>
+              </select>
+            </div>
+            <button id="btn-booking-submit" class="btn btn-success btn-sm booking-submit-btn">
+              <i class="fas fa-paper-plane"></i> Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="chat-form">
+      <input type="text" id="chat-input" placeholder="Ask me anything..." autocomplete="off" />
+      <button type="submit" id="btn-send" title="Send">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+</div>

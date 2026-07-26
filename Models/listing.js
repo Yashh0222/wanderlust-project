@@ -65,6 +65,11 @@ const listingSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
+
+  embedding: {
+    type: [Number],
+    default: [],
+  },
 });
 
 // Delete reviews when listing deleted
